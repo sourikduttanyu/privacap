@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+*.so
+
+# Go
+/server/server
+/budget-manager/budget-manager
+*.exe
+*.test
+/vendor/
+
+# Node / React
+node_modules/
+/dashboard/build/
+/dashboard/dist/
+.next/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Docker volumes
+docker-volumes/
+
+# Redis
+dump.rdb
+
+# Experiment outputs (keep scripts, ignore generated artifacts)
+experiments/results.csv
+experiments/*.png
+experiments/__pycache__/
+
+# Claude
+CLAUDE.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
