@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veil — Privacy Policy</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 680px; margin: 60px auto; padding: 0 24px; color: #1a1a2e; line-height: 1.7; }
+    h1 { font-size: 1.6rem; margin-bottom: 4px; }
+    h2 { font-size: 1.05rem; margin-top: 2rem; color: #333; }
+    .tagline { color: #555; margin-bottom: 2rem; font-size: 0.95rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+    th { text-align: left; padding: 8px 12px; background: #f4f4f8; }
+    td { padding: 8px 12px; border-top: 1px solid #e8e8f0; vertical-align: top; }
+    .never { color: #c00; font-weight: 600; }
+    .always { color: #060; font-weight: 600; }
+    footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e8e8f0; color: #888; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<h1>Veil — Privacy Policy</h1>
+<p class="tagline">Last updated: June 2026</p>
+
+<p>
+  Veil is a browser extension that enforces ad frequency caps using local differential privacy.
+  This policy explains exactly what data is processed, what is stored, and what is never collected.
+</p>
+
+<h2>What Veil collects</h2>
+
+<table>
+  <tr>
+    <th>Data</th>
+    <th>Where it goes</th>
+    <th>Retention</th>
+  </tr>
+  <tr>
+    <td><strong>cohort_id</strong><br><small>e.g. <code>us-unknown-desktop</code></small><br>Derived from timezone region + screen width. Represents a large group, not an individual.</td>
+    <td>Stored in browser memory. Sent to cap-service only if server mode is enabled.</td>
+    <td>In-memory only. Cleared on service worker restart.</td>
+  </tr>
+  <tr>
+    <td><strong>campaign_id</strong><br><small>e.g. <code>google_ads_iframe_/7646/...</code></small><br>Ad slot identifier extracted from ad element attributes. Identifies the ad, not the user.</td>
+    <td>Stored in browser memory. Sent to cap-service only if server mode is enabled.</td>
+    <td>In-memory only. Cleared on service worker restart.</td>
+  </tr>
+  <tr>
+    <td><strong>noisy_value</strong><br><small>e.g. <code>3</code></small><br>A mathematically scrambled impression count. The true count is never transmitted — noise is added before any data leaves the device.</td>
+    <td>Sent to cap-service only if server mode is enabled. Stored in Postgres impression_log.</td>
+    <td>24-hour window, then expires.</td>
+  </tr>
+  <tr>
+    <td><strong>Session stats</strong><br><small>totalServed, totalSuppressed, recentActions</small><br>Aggregate counts used to display the popup badge and recent activity.</td>
+    <td>Stored locally in <code>chrome.storage.local</code>. Never transmitted.</td>
+    <td>Until user clears extension data.</td>
+  </tr>
+</table>
+
+<h2>What Veil never collects</h2>
+
+<table>
+  <tr><th>Data</th><th>Status</th></tr>
+  <tr><td>User identifier of any kind</td><td class="never">Never collected. No user_id column exists in any table. Structurally impossible.</td></tr>
+  <tr><td>True impression count</td><td class="never">Never transmitted. Noise is applied before any network call. The server receives only the scrambled value.</td></tr>
+  <tr><td>Browsing history</td><td class="never">Never collected. The content script checks for ad slot presence only.</td></tr>
+  <tr><td>Page content or URLs</td><td class="never">Never read or transmitted.</td></tr>
+  <tr><td>IP address</td><td class="never">Not stored by the cap-service. Standard server logs are not retained.</td></tr>
+  <tr><td>Cross-site identity</td><td class="never">Cohort is derived from timezone + screen width only. Cannot be used to track individuals across sites.</td></tr>
+</table>
+
+<h2>Local-only mode (default)</h2>
+
+<p>
+  By default, Veil runs entirely on your device. No data is sent to any server. Frequency cap decisions are made locally using an in-memory count. Nothing leaves your browser.
+</p>
+<p>
+  Server mode is opt-in and requires you to manually enter a server URL in the extension settings. Without a configured server URL, no network requests are made.
+</p>
+
+<h2>Third-party services</h2>
+
+<p>Veil does not use analytics, crash reporting, or any third-party SDKs. No data is shared with ad networks, data brokers, or any third party.</p>
+
+<h2>Children</h2>
+
+<p>Veil does not knowingly collect data from children under 13.</p>
+
+<h2>Changes to this policy</h2>
+
+<p>Changes will be reflected in the <a href="https://github.com/sourikduttanyu/privacap">GitHub repository</a> with an updated date above.</p>
+
+<h2>Contact</h2>
+
+<p>Questions: <a href="mailto:sourik1999dutta@gmail.com">sourik1999dutta@gmail.com</a></p>
+
+<footer>
+  Veil is open source software, licensed under GPL v3.<br>
+  <a href="https://github.com/sourikduttanyu/privacap">github.com/sourikduttanyu/privacap</a>
+</footer>
+
+</body>
+</html>
