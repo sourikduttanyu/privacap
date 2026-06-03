@@ -1,0 +1,4 @@
+version: "3.9"
+# delegates to infra/docker-compose.yml so `docker compose up` works from repo root
+include:
+  - path: infra/docker-compose.yml
