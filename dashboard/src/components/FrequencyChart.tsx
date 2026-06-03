@@ -9,10 +9,10 @@ export function FrequencyChart({ data }: { data: Bucket[] }) {
         <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2a" />
         <XAxis
           dataKey="count"
-          tick={{ fill: "#9ca3af", fontSize: 11 }}
-          label={{ value: "Times this ad appeared (scrambled for privacy)", position: "insideBottom", offset: -12, fill: "#9ca3af", fontSize: 10 }}
+          tick={{ fill: "#9ca3af", fontSize: 12 }}
+          label={{ value: "Times this ad appeared (scrambled for privacy)", position: "insideBottom", offset: -12, fill: "#9ca3af", fontSize: 11 }}
         />
-        <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} />
+        <YAxis tick={{ fill: "#9ca3af", fontSize: 12 }} tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} />
         <Tooltip
           contentStyle={{ background: "#16161f", border: "1px solid #2e2e42", borderRadius: 8, fontSize: 12 }}
           labelStyle={{ color: "#c8c8d8" }}

@@ -30,9 +30,9 @@ export function BudgetGauge({ rows }: { rows: BudgetRow[] }) {
           />
         </RadialBarChart>
       </ResponsiveContainer>
-      <div className="text-2xl font-bold -mt-8" style={{ color }}>{pct}%</div>
-      <div className="text-xs text-[#9ca3af] mt-1 tracking-wide">privacy shield remaining</div>
-      <div className="text-xs text-[#6b7280] mt-2 text-center max-w-48 leading-relaxed">{statusText}</div>
+      <div className="text-3xl font-bold -mt-8" style={{ color }}>{pct}%</div>
+      <div className="text-sm text-[#9ca3af] mt-1 tracking-wide">privacy shield remaining</div>
+      <div className="text-sm text-[#6b7280] mt-2 text-center max-w-48 leading-relaxed">{statusText}</div>
       <div className="text-xs text-[#4b5563] mt-2">{rows.length} group{rows.length !== 1 ? "s" : ""} protected</div>
     </div>
   );
@@ -41,8 +41,8 @@ export function BudgetGauge({ rows }: { rows: BudgetRow[] }) {
 function Empty() {
   return (
     <div className="flex flex-col items-center justify-center h-48 gap-2">
-      <div className="text-[#6b7280] text-sm">Shield not activated yet</div>
-      <div className="text-xs text-[#4b5563] text-center max-w-52 leading-relaxed">
+      <div className="text-[#6b7280] text-base">Shield not activated yet</div>
+      <div className="text-sm text-[#4b5563] text-center max-w-52 leading-relaxed">
         Once you browse, this shows how much of your daily privacy protection has been used. Resets every 24 hours.
       </div>
     </div>

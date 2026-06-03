@@ -61,13 +61,13 @@ interface CardProps {
 
 function Card({ title, subtitle, tooltip, children }: CardProps) {
   return (
-    <div className="bg-[#0e0e14] border border-[#20202e] rounded-xl p-5">
-      <div className="mb-4">
-        <div className="flex items-center gap-1">
-          <h2 className="text-sm font-semibold text-[#e8e8f2] tracking-tight">{title}</h2>
+    <div className="bg-[#0e0e14] border border-[#20202e] rounded-xl p-6">
+      <div className="mb-5">
+        <div className="flex items-center gap-1.5">
+          <h2 className="text-base font-semibold text-[#e8e8f2] tracking-tight">{title}</h2>
           <InfoTooltip text={tooltip} />
         </div>
-        <p className="text-xs text-[#9ca3af] mt-0.5 leading-relaxed">{subtitle}</p>
+        <p className="text-sm text-[#9ca3af] mt-1 leading-relaxed">{subtitle}</p>
       </div>
       {children}
     </div>
@@ -115,8 +115,8 @@ export default function App() {
     <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
       <header className="mb-2 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">Veil</h1>
-          <p className="text-xs text-[#9ca3af] mt-0.5">Stop ads from stalking you — without giving up your data</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Veil</h1>
+          <p className="text-sm text-[#9ca3af] mt-0.5">Stop ads from stalking you — without giving up your data</p>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap justify-end">
@@ -170,7 +170,7 @@ export default function App() {
 
       {/* Hero banner */}
       <div className="mb-4 mt-3 px-4 py-2.5 bg-[#0e0e18] border border-[#22224a] rounded-lg flex items-center justify-between gap-4">
-        <p className="text-xs text-[#a0a0c8]">
+        <p className="text-sm text-[#a0a0c8]">
           <span className="font-semibold text-[#b0b0e0]">Works on top of your ad blocker — or without one.</span>{" "}
           Ad blockers miss YouTube ads, social media, and any site that fights them. Veil runs as a second layer: for every ad that gets through, it enforces a frequency cap using math. Same ad too many times → blocked. Your real counts never leave your device.
         </p>
@@ -188,8 +188,8 @@ export default function App() {
           {HOW_IT_WORKS.map(s => (
             <div key={s.step} className="bg-[#0e0e14] border border-[#20202e] rounded-lg p-3">
               <div className="text-[#7c7cff] font-bold text-xs mb-1 uppercase tracking-wider">Step {s.step}</div>
-              <div className="text-[#e8e8f2] text-xs font-semibold mb-1">{s.title}</div>
-              <div className="text-[#6b7280] text-[10px] leading-relaxed">{s.body}</div>
+              <div className="text-[#e8e8f2] text-sm font-semibold mb-1">{s.title}</div>
+              <div className="text-[#6b7280] text-xs leading-relaxed">{s.body}</div>
             </div>
           ))}
         </div>
@@ -229,7 +229,7 @@ export default function App() {
         </Card>
       </div>
 
-      <footer className="mt-6 flex items-center justify-between text-[10px] text-[#6b7280]">
+      <footer className="mt-6 flex items-center justify-between text-xs text-[#6b7280]">
         <span>Your real ad data never leaves your device. Ever.</span>
         <a
           href="https://github.com/sourikduttanyu/privacap"

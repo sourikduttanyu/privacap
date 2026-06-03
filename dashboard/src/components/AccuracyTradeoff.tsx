@@ -50,7 +50,7 @@ export function AccuracyTradeoff({ selectedEpsilon }: { selectedEpsilon: number 
 
   return (
     <div>
-      <div className="flex justify-between text-[10px] text-[#6b7280] mb-2 px-1">
+      <div className="flex justify-between text-xs text-[#6b7280] mb-2 px-1">
         <span>← Max privacy · ads see almost nothing</span>
         <span>More ad visibility · less scrambling →</span>
       </div>
@@ -59,13 +59,13 @@ export function AccuracyTradeoff({ selectedEpsilon }: { selectedEpsilon: number 
           <CartesianGrid strokeDasharray="3 3" stroke="#1a1a2a" />
           <XAxis
             dataKey="epsilon"
-            tick={{ fill: "#9ca3af", fontSize: 11 }}
-            label={{ value: "Privacy setting (ε)", position: "insideBottom", offset: -12, fill: "#9ca3af", fontSize: 10 }}
+            tick={{ fill: "#9ca3af", fontSize: 12 }}
+            label={{ value: "Privacy setting (ε)", position: "insideBottom", offset: -12, fill: "#9ca3af", fontSize: 12 }}
           />
           <YAxis
-            tick={{ fill: "#9ca3af", fontSize: 11 }}
+            tick={{ fill: "#9ca3af", fontSize: 12 }}
             tickFormatter={(v) => `${v}%`}
-            label={{ value: "Count error", angle: -90, position: "insideLeft", offset: 14, fill: "#9ca3af", fontSize: 10 }}
+            label={{ value: "Count error", angle: -90, position: "insideLeft", offset: 14, fill: "#9ca3af", fontSize: 12 }}
           />
           <Tooltip content={<CustomTooltip />} />
           <ReferenceLine
@@ -93,12 +93,12 @@ export function AccuracyTradeoff({ selectedEpsilon }: { selectedEpsilon: number 
         </LineChart>
       </ResponsiveContainer>
       {selected && (
-        <div className="mt-1 text-center text-xs text-[#9ca3af]">
+        <div className="mt-1 text-center text-sm text-[#9ca3af]">
           At ε={selectedEpsilon}: <span className="text-[#e2e2e8]">~{selected.mae}% scramble</span>
           {" · "}{PRIVACY_LABELS[selectedEpsilon]}
         </div>
       )}
-      <p className="text-[10px] text-[#6b7280] text-center mt-0.5">
+      <p className="text-xs text-[#6b7280] text-center mt-1">
         Hover each point · 100k simulated browsing sessions
       </p>
     </div>

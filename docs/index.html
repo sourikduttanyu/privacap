@@ -4,59 +4,306 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Veil — Stop ads from stalking you</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0a0a0f; color: #e8e8f2; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; }
-    .logo { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 12px; }
-    .tagline { font-size: 1.1rem; color: #9ca3af; margin-bottom: 8px; text-align: center; max-width: 480px; line-height: 1.5; }
-    .sub { font-size: 0.85rem; color: #6b7280; margin-bottom: 40px; text-align: center; max-width: 420px; line-height: 1.6; }
-    .balance { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 560px; width: 100%; margin-bottom: 40px; }
-    .card { background: #0e0e14; border: 1px solid #20202e; border-radius: 12px; padding: 18px; text-align: center; }
-    .card-icon { font-size: 1.4rem; margin-bottom: 8px; }
-    .card-title { font-size: 0.8rem; font-weight: 600; color: #e8e8f2; margin-bottom: 4px; }
-    .card-body { font-size: 0.72rem; color: #6b7280; line-height: 1.5; }
-    .links { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
-    a.btn { display: inline-block; padding: 10px 22px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; text-decoration: none; transition: opacity 0.15s; }
-    a.btn:hover { opacity: 0.85; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #08080d;
+      color: #e8e8f2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 48px;
+      border-bottom: 1px solid #141422;
+    }
+    .nav-logo { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-links a { font-size: 0.875rem; color: #9ca3af; text-decoration: none; transition: color 0.15s; }
+    .nav-links a:hover { color: #e8e8f2; }
+
+    /* ── Hero ── */
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 24px 60px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #141422;
+      border: 1px solid #2a2a4a;
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      color: #9090cc;
+      margin-bottom: 32px;
+      letter-spacing: 0.01em;
+    }
+    .badge-dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; }
+
+    h1 {
+      font-size: clamp(3rem, 8vw, 5.5rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      color: #fff;
+      margin-bottom: 24px;
+      max-width: 800px;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: #9ca3af;
+      max-width: 560px;
+      line-height: 1.65;
+      margin-bottom: 16px;
+    }
+
+    .hero-note {
+      font-size: 0.875rem;
+      color: #6b7280;
+      max-width: 480px;
+      line-height: 1.6;
+      margin-bottom: 44px;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 80px;
+    }
+
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
     .btn-primary { background: #4040a0; color: #fff; }
-    .btn-secondary { background: #141420; border: 1px solid #2a2a3e; color: #c0c0e0; }
-    footer { margin-top: 48px; font-size: 0.75rem; color: #4b5563; text-align: center; }
-    footer a { color: #6b7280; text-decoration: none; }
+    .btn-primary:hover { background: #5050b8; }
+    .btn-secondary { background: #0e0e18; border: 1px solid #2a2a3e; color: #c0c0e0; }
+    .btn-secondary:hover { border-color: #4a4a70; color: #e0e0f4; }
+
+    /* ── Cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 860px;
+      width: 100%;
+      padding: 0 24px;
+      margin: 0 auto 80px;
+    }
+
+    .card {
+      background: #0d0d16;
+      border: 1px solid #1e1e2e;
+      border-radius: 16px;
+      padding: 28px 24px;
+    }
+
+    .card-icon { font-size: 1.8rem; margin-bottom: 14px; }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #e8e8f2;
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .card-body {
+      font-size: 0.875rem;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+
+    /* ── How it works ── */
+    .how {
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto 80px;
+      padding: 0 24px;
+    }
+
+    .how-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .step {
+      background: #0d0d16;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .step-num {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #7c7cff;
+      margin-bottom: 8px;
+    }
+
+    .step-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #e8e8f2;
+      margin-bottom: 6px;
+    }
+
+    .step-body {
+      font-size: 0.82rem;
+      color: #6b7280;
+      line-height: 1.55;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid #141422;
+      padding: 24px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    footer span, footer a {
+      font-size: 0.82rem;
+      color: #4b5563;
+      text-decoration: none;
+    }
+
     footer a:hover { color: #9ca3af; }
+
+    @media (max-width: 640px) {
+      nav { padding: 16px 20px; }
+      .cards { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      footer { padding: 20px; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="logo">Veil</div>
-  <p class="tagline">Stop ads from stalking you — without giving up your data.</p>
-  <p class="sub">Works on top of your ad blocker. Enforces frequency caps using differential privacy math. Your real counts never leave your device.</p>
+<nav>
+  <span class="nav-logo">Veil</span>
+  <div class="nav-links">
+    <a href="https://github.com/sourikduttanyu/Veil">GitHub</a>
+    <a href="privacy-policy.html">Privacy</a>
+  </div>
+</nav>
 
-  <div class="balance">
-    <div class="card">
-      <div class="card-icon">🛡️</div>
-      <div class="card-title">Your privacy</div>
-      <div class="card-body">Zero identity exposure. No user IDs anywhere.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon">📊</div>
-      <div class="card-title">Ads still work</div>
-      <div class="card-body">Advertisers reach cohorts. Publishers still earn.</div>
-    </div>
-    <div class="card">
-      <div class="card-icon">🔢</div>
-      <div class="card-title">Math, not policy</div>
-      <div class="card-body">Differential privacy. Provable guarantees. Open source.</div>
-    </div>
+<section class="hero">
+  <div class="badge">
+    <span class="badge-dot"></span>
+    Open source · GPL v3 · Chrome MV3
   </div>
 
-  <div class="links">
-    <a class="btn btn-primary" href="https://github.com/sourikduttanyu/Veil">View on GitHub</a>
+  <h1>Stop ads from<br>stalking you.</h1>
+
+  <p class="hero-sub">
+    Veil enforces ad frequency caps using differential privacy math.
+    The same ad can't follow you everywhere — and your identity stays yours.
+  </p>
+
+  <p class="hero-note">
+    Works on top of your ad blocker. Catches what it misses — YouTube, social feeds,
+    sites that fight blockers. Your real counts never leave your device.
+  </p>
+
+  <div class="cta-row">
+    <a class="btn btn-primary" href="https://github.com/sourikduttanyu/Veil">View on GitHub →</a>
     <a class="btn btn-secondary" href="privacy-policy.html">Privacy Policy</a>
   </div>
+</section>
 
-  <footer>
-    <p>GPL v3 · <a href="https://github.com/sourikduttanyu/Veil">github.com/sourikduttanyu/Veil</a></p>
-  </footer>
+<div class="cards">
+  <div class="card">
+    <div class="card-icon">🛡️</div>
+    <div class="card-title">Your privacy</div>
+    <div class="card-body">Zero identity exposure. No user IDs in any table, field, or log. Structurally enforced.</div>
+  </div>
+  <div class="card">
+    <div class="card-icon">📊</div>
+    <div class="card-title">Ads still work</div>
+    <div class="card-body">Advertisers reach demographic cohorts. Publishers still earn. The ad ecosystem keeps running.</div>
+  </div>
+  <div class="card">
+    <div class="card-icon">🔢</div>
+    <div class="card-title">Math, not policy</div>
+    <div class="card-body">Local differential privacy with a Geometric mechanism. Provable guarantees. Not a browser setting someone can override.</div>
+  </div>
+</div>
+
+<div class="how">
+  <div class="how-title">How Veil works</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">Step 1</div>
+      <div class="step-title">Detect</div>
+      <div class="step-body">Spots ad slots that got past your blocker — YouTube, social feeds, news sites.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">Step 2</div>
+      <div class="step-title">Count</div>
+      <div class="step-body">Tracks how many times each ad appeared. Count stays on your device only.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">Step 3</div>
+      <div class="step-title">Scramble</div>
+      <div class="step-body">Adds mathematical noise before any data leaves your device. Server sees a blurred number.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">Step 4</div>
+      <div class="step-title">Block</div>
+      <div class="step-body">Once an ad crosses your limit, Veil suppresses it. Works even when your blocker is off.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>Your real ad data never leaves your device. Ever.</span>
+  <a href="https://github.com/sourikduttanyu/Veil">github.com/sourikduttanyu/Veil</a>
+</footer>
 
 </body>
 </html>
