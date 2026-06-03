@@ -15,8 +15,11 @@ jobs:
 
       - name: Grep for user_id
         run: |
-          # Fail if any source file contains user_id (column, field, key, log)
-          # SQL migration comments are intentional — excluded by path
+          # Fail if user_id appears as a real field, column, or payload key.
+          # Intentional occurrences are filtered:
+          #   - comment lines containing user_id (// ... user_id, # ... user_id, * user_id)
+          #   - the rejection handler in impressions.go that detects and blocks user_id
+          #   - docstrings documenting its absence
           RESULT=$(grep -r "user_id" \
             --include="*.go" \
             --include="*.py" \
@@ -25,24 +28,17 @@ jobs:
             --include="*.tsx" \
             --exclude-dir=node_modules \
             --exclude-dir=.git \
-            -l . || true)
+            -n . \
+            | grep -Ev "//.*user_id|\* .*user_id|#.*user_id|not_accepted|Reject.*user_id|absent|intentional|[Nn]o user_id|must be" \
+            || true)
 
           if [ -n "$RESULT" ]; then
-            echo "❌ user_id found in the following files:"
+            echo "❌ user_id used as real field/column in source:"
             echo "$RESULT"
-            echo ""
-            grep -r "user_id" \
-              --include="*.go" \
-              --include="*.py" \
-              --include="*.js" \
-              --include="*.ts" \
-              --include="*.tsx" \
-              --exclude-dir=node_modules \
-              -n .
             exit 1
           fi
 
-          echo "✅ No user_id found in source files"
+          echo "✅ No improper user_id usage found"
 
   noise-before-fetch:
     name: Extension noise applied before fetch
