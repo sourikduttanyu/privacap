@@ -7,60 +7,76 @@ Update status as each item is resolved.
 
 ## Hard blockers — Chrome will reject without these
 
-- [x] **Remove `localhost` from `host_permissions`** — done. `manifest.json` no longer contains localhost.
+- [x] **Remove `localhost` from `host_permissions`** — done.
 
-- [x] **Decide on backend architecture** — done. Local-only mode is default (`capServiceUrl: ""`). Server mode is opt-in via popup settings. Fallback to local cap check if server unreachable.
+- [x] **Decide on backend architecture** — done. Local-only default, server opt-in via popup settings.
 
-- [x] **Privacy policy written** — `docs/privacy-policy.html` created and ready.
-  - [ ] **Enable GitHub Pages** (Settings → Pages → branch: main, folder: `/docs`) so it's live at `sourikduttanyu.github.io/privacap/privacy-policy.html`
-  - [ ] **Add privacy policy URL to Chrome Web Store listing** during submission
+- [x] **Privacy policy live at public URL**
+  Live at: `https://sourikduttanyu.github.io/Veil/privacy-policy.html`
+  - [ ] Add this URL to the Chrome Web Store listing during submission.
+
+- [ ] **`declarativeNetRequest` permission justification — HIGH RISK**
+
+  This is the most likely rejection reason. Google added MV3 specifically to limit ad-blocking extensions that use this API. Chrome Web Store policy says extensions that block requests must have a clearly stated non-deceptive primary purpose.
+
+  **Veil's position:** Frequency capping is a standard practice in the ad industry. Veil enforces it client-side, without surveillance. This is not blanket ad blocking — only ads that have appeared more than N times are blocked. The first N impressions always load.
+
+  **What to write in the "Permission justification" field:**
+  > Veil uses `declarativeNetRequest` to enforce ad frequency caps. When an ad exceeds a user-configured impression limit (default: 5), Veil adds a session-only network rule blocking that specific ad unit from loading on subsequent page visits. Rules are scoped to `sub_frame` resources only, target specific ad unit URL paths (not entire domains), and are automatically cleared when the browser session ends. This is not blanket ad blocking — Veil does not block all ads. It enforces the same frequency limits that ad networks themselves apply, but client-side and without user identification.
+
+  **What to write in "Single purpose description":**
+  > Veil enforces ad frequency caps using local differential privacy. It prevents the same ad from appearing more than a configurable number of times, without tracking user identity.
+
+  **Risk level:** Medium-high. Google may reject on first submission. If rejected, the appeal should cite: (1) frequency capping is a stated advertiser best practice, (2) rules are session-only and ad-unit-specific, not domain-wide, (3) the extension does not replace ads or inject content.
 
 ---
 
 ## Required assets — store listing will be incomplete without these
 
 - [ ] **1–5 screenshots at 1280×800 or 640×400**
-  Capture: extension popup active on a real site, dashboard showing top ads chart, blocked ad counter.
+  Capture: extension popup on a real site showing suppressed count, dashboard top ads chart, How it works panel open.
 
 - [ ] **Pay $5 one-time developer fee**
   URL: https://chrome.google.com/webstore/devconsole
-  Sign in with Google account → Payments → Register.
+  Sign in → Payments → Register.
 
-- [ ] **Write permission justification** (submitted in the developer console form)
-  Draft:
-  > Veil's content script must run on all pages to detect ad slots (DoubleClick iframes, AdSense elements, data-ad-slot divs). It reads no user content — only checks for the presence of known ad slot patterns. No browsing history, page content, or user data is transmitted. The noisy_value sent to the cap service is a scrambled integer, not a URL or identifier.
+- [ ] **Update permission justification to cover all three permissions**
+
+  | Permission | Justification |
+  |---|---|
+  | `storage` | Stores epsilon setting, frequency cap, session stats for popup display. No browsing data. |
+  | `activeTab` | Reads ad slot attributes (data-ad-slot, iframe src) from the active tab to identify which campaign is being seen. |
+  | `declarativeNetRequest` | Session rules to block over-cap ad units at network level. Rules are ad-unit-specific, sub_frame only, session-scoped. See above. |
+  | `https://*/*` host permission | Content script must run on all pages to detect ad slots. Ad slots appear on any site, so broad host permission is required. No page content, URLs, or user data is transmitted — only a scrambled impression count. |
 
 ---
 
-## Recommended before submitting (not hard blockers, but improve approval odds)
+## Recommended before submitting
 
-- [ ] **Rename GitHub repo from `privacap` → `veil`**
-  Settings → Repository name → Rename. GitHub auto-redirects old URL.
-  Update all `git clone` references in README.md after rename.
+- [ ] **Test on Chrome stable — especially declarativeNetRequest behaviour**
+  Load unpacked → browse weather.com, cnn.com → let an ad hit the cap → confirm network tab in DevTools shows the subsequent iframe request blocked (not just hidden).
 
-- [ ] **Create 440×280 promotional tile** (optional but boosts store listing)
-  Dark background, Veil wordmark, tagline: "Stop ads from stalking you."
+- [x] **GitHub Pages live** — `https://sourikduttanyu.github.io/Veil/`
 
-- [ ] **Create `PRIVACY_POLICY.md`** and host it publicly
-  Can live in repo + GitHub Pages.
+- [ ] **Version bump manifest to `1.0.0`**
 
 - [ ] **Extension popup shows clear on/off toggle**
-  Reviewers check that users can disable the extension easily from the popup.
+  Reviewers check users can disable easily.
 
-- [ ] **Test on Chrome stable (not just Canary/Dev)**
-  Load unpacked → verify no console errors on google.com, cnn.com, weather.com.
-
-- [ ] **Version bump manifest to `1.0.0`** before first store submission
-  `0.x` versions signal pre-release; store reviewers prefer `1.0.0`.
+- [ ] **Promotional tile 440×280** (optional, improves store ranking)
 
 ---
 
-## Post-submission checklist
+## If rejected — appeals path
 
-- [ ] Monitor review status at https://chrome.google.com/webstore/devconsole
-  Typical review time: 1–3 business days for new extensions.
-- [ ] Respond promptly to any reviewer questions (usually via email to developer account)
-- [ ] If rejected: read the specific policy violation, fix, resubmit same listing (no new fee)
+Chrome Web Store rejections come with a policy code. Most likely codes for Veil:
+
+| Code | Reason | Fix |
+|---|---|---|
+| `Ads blocking` | Extension blocks ad requests | Appeal: cite frequency capping use case, session-only rules, ad-unit-specific filters |
+| `Broad host permissions` | `https://*/*` flagged | Justify: ad slots appear on any site, content script can't predict which domains |
+| `Missing privacy policy` | No policy URL in listing | Add `https://sourikduttanyu.github.io/Veil/privacy-policy.html` |
+| `Deceptive functionality` | Misleading description | Clarify: Veil doesn't block all ads, it caps frequency |
 
 ---
 
@@ -72,11 +88,13 @@ Update status as each item is resolved.
 | Extension icons (16, 48, 128) | ✅ Done | |
 | Name + description | ✅ Done | "Veil" |
 | GPL v3 license | ✅ Done | |
-| Remove localhost host_permission | ✅ Done | manifest.json cleaned |
-| Backend decision | ✅ Done | local-only default, server opt-in |
-| Privacy policy written | ✅ Done | docs/privacy-policy.html |
-| GitHub Pages enabled | ❌ Manual step | Settings → Pages → /docs |
+| Remove localhost host_permission | ✅ Done | |
+| Backend: local-only default | ✅ Done | |
+| Privacy policy written + live | ✅ Done | sourikduttanyu.github.io/Veil/privacy-policy.html |
+| GitHub Pages live | ✅ Done | |
+| declarativeNetRequest justification | ⚠️ Written here, must paste in CWS form | High rejection risk |
 | Screenshots | ❌ Needed | |
 | $5 developer fee | ❌ Needed | |
-| Permission justification written | ❌ Needed | |
-| Repo renamed to veil | ❌ Recommended | |
+| Permission justification pasted in CWS | ❌ Needed | |
+| Version bump to 1.0.0 | ❌ Recommended | |
+| Test network blocking in DevTools | ❌ Needed | Verify Path A actually works |
