@@ -1,26 +1,58 @@
 # Veil
 
-> Stop ads from stalking you — without giving up your data.
 > Frequency caps enforced with math. No user IDs. No tracking. No exceptions.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Go 1.24](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go)](https://go.dev)
 [![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://python.org)
+[![React](https://img.shields.io/badge/React-Dashboard-61DAFB?logo=react)](https://react.dev)
+[![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis)](https://redis.io)
+[![Postgres](https://img.shields.io/badge/Postgres-16-4169E1?logo=postgresql)](https://www.postgresql.org)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4?logo=googlechrome)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 
 ---
 
-## Why Veil exists — and why it's different
+## Table of Contents
 
-Most privacy tools pick a side: block everything, or block nothing.
+- [How this works in 60 seconds](#how-this-works-in-60-seconds)
+- [Why Veil exists](#why-veil-exists)
+- [Technical highlights](#technical-highlights)
+- [Why LDP, not server-side DP](#why-ldp-not-server-side-dp)
+- [Veil works with your ad blocker](#veil-works-with-your-ad-blocker-not-instead-of-it)
+- [Architecture](#architecture)
+- [Quick start](#quick-start)
+- [How it works](#how-it-works)
+- [Privacy guarantees](#privacy-guarantees)
+- [Environment variables](#environment-variables)
+- [Bring your own noise](#bring-your-own-noise)
+- [Repository layout](#repository-layout)
+- [Contributing](#contributing)
+- [License](#license)
 
-uBlock Origin, Privacy Badger, and Ghostery block ads or trackers outright. They work well — but they break publisher revenue and still don't solve the core problem: the same ad stalking you across twenty sites because the ad network knows it has shown you that ad nineteen times already.
+---
 
-Veil takes a different position: **ads are fine. Surveillance to run them is not.**
+## How this works in 60 seconds
+
+- Your browser counts how many times you see each ad — locally, in memory, never written to disk.
+- Before sending any report to a server, a Geometric noise mechanism scrambles the count in-browser. A true count of 5 might become 3 or 7. The server never sees the real number.
+- The server accumulates noisy reports across a cohort (e.g., `us-desktop`) and decides when that cohort has seen an ad enough times. No individual is ever identified or tracked.
+- When the cap is hit, Veil suppresses the ad at the network layer — the request never leaves the browser, no impression is logged, no tracking pixel fires.
+
+---
+
+## Why Veil exists
+
+Third-party cookies are gone. User-ID-based frequency capping — the mechanism ad networks used to prevent the same ad from following a person across twenty sites — is now both technically broken and legally exposed under GDPR+ and US federal privacy law.
+
+The standard replacement proposals push tracking into the browser (Topics API, Protected Audience) or ask users to accept cohort profiling in exchange for marginally less surveillance. Neither fully resolves the core tension.
+
+Veil takes a different position: **the frequency cap is a legitimate business need. The user profile built to enforce it is not.**
+
+Local Differential Privacy solves this at the mathematical layer. The same technique Apple uses for keyboard analytics and Google uses for Chrome usage statistics applies here to ad impression counts — the true count stays on the device, the noisy count is provably insufficient to reconstruct individual behavior, and the server-side aggregate is still accurate enough to enforce "too many times."
 
 ### The balance Veil strikes
 
-| | Ad blockers | No protection | Veil |
+|  | Ad blockers | No protection | Veil |
 |---|---|---|---|
 | You see repetitive ads | ✗ (blocks all) | ✓ | ✗ |
 | Publishers earn revenue | ✗ | ✓ | ✓ |
@@ -28,21 +60,72 @@ Veil takes a different position: **ads are fine. Surveillance to run them is not
 | Your identity is tracked | ✗ | ✓ | ✗ |
 | Frequency caps enforced | N/A | ✓ (via user ID) | ✓ (via math) |
 
-Advertisers benefit from frequency capping too — over-serving an ad tanks conversion rates and wastes budget. Veil enforces the same cap that ad networks already want, using cohort-level signals instead of individual surveillance. A cohort like `us-desktop` reaches the right demographic without pinning the count to a specific person.
+Advertisers benefit from frequency capping too — over-serving an ad tanks conversion rates and wastes budget. Veil enforces the same cap ad networks already want, using cohort-level signals instead of individual surveillance. A cohort like `us-desktop` reaches the right demographic without pinning the count to a specific person.
 
-The usual fix is a server-side frequency counter keyed on your user ID. Veil solves it with math: your true count never leaves your device. The server receives a mathematically noisy number — enough to enforce "too many times," not enough to identify you. The noise is provably private: [Local Differential Privacy](https://en.wikipedia.org/wiki/Local_differential_privacy) with a Geometric mechanism.
+---
 
-**Result:** publishers monetize. advertisers reach demographics without building profiles. you stop seeing the same ad fifty times.
+## Technical highlights
+
+**Local Differential Privacy with a Geometric mechanism**
+
+The Geometric mechanism is the correct choice for integer count data. Unlike Laplace (which produces real-valued noise requiring rounding) or Gaussian (which provides only approximate DP), Geometric produces integer-valued noise and satisfies pure ε-differential privacy. At `ε=1.0`, a true count of 5 is reported as a value between roughly 2 and 8 — enough signal for cohort-level enforcement, not enough to reconstruct individual behavior.
+
+```
+alpha = exp(-epsilon / sensitivity)
+noise = ±Geometric(1 - alpha)
+noisy_value = max(0, true_count + noise)
+```
+
+This runs in pure JavaScript inside the service worker before any `fetch()` call.
+
+**Fail-closed epsilon budget**
+
+Every cohort gets a finite epsilon budget per 24-hour window (`MAX_EPSILON_PER_WINDOW`, default `10.0`). The budget-manager uses `SELECT FOR UPDATE` in Postgres to prevent concurrent overspend. When the budget is exhausted, the budget-manager returns 503 and cap-service fails closed — the ad is not served. Privacy takes precedence over availability; there is no fallback path that degrades the guarantee.
+
+**No PII schema — structurally, not by policy**
+
+The `user_id` column does not exist in any table. The migration comment in `001_cohorts.sql` reads:
+
+```sql
+-- no user_id column. intentional. PII storage structurally impossible.
+```
+
+The payload schema is `{cohort_id, campaign_id, noisy_value}`. There is no field to add a user identifier to; the absence is architectural, not a lint rule or a promise in a privacy policy.
+
+**Two-tier ad suppression**
+
+When an ad crosses the frequency cap, Veil first hides it in the DOM (immediate, current page load), then adds a `declarativeNetRequest` session rule that blocks the ad iframe at the network layer on all subsequent loads this session. The ad server never receives the request; no tracking pixel fires; no impression is registered. This is equivalent to what uBlock Origin does for blocked ads — except the trigger is a mathematical cap, not a filter list.
+
+**Chrome MV3 service worker architecture**
+
+The background context is a service worker (MV3-compliant), not a persistent background page. In-memory true counts are intentionally ephemeral — they reset on service worker restart. This is not a limitation; it is part of the privacy model. A count that cannot persist cannot be exfiltrated.
+
+---
+
+## Why LDP, not server-side DP
+
+A common alternative is to collect true counts server-side and apply differential privacy to query results (e.g., add noise before returning aggregate statistics). Veil applies noise locally instead. The distinction matters:
+
+| | Server-side DP | Local DP (Veil) |
+|---|---|---|
+| True counts reach the server | Yes | No |
+| Server breach exposes per-user data | Yes | No — server never had it |
+| User must trust the server | Yes | No |
+| Accuracy at same epsilon | Higher | Lower |
+| Viable without a user ID | No | Yes |
+| Compliant with cookie deprecation | No | Yes |
+
+Server-side DP protects query results from observers; it does not protect the raw data from the operator. Local DP means the raw data is never transmitted. For a system where the server is a third-party ad infrastructure component that the user has no reason to trust, local is the only viable model.
+
+The accuracy tradeoff is real. At `ε=1.0`, cohort-level enforcement works well; individual-level reconstruction does not. That asymmetry is the design.
 
 ---
 
 ## Veil works with your ad blocker, not instead of it
 
-Ad blockers are good. They're not enough.
+Ad blockers are good. They are not enough.
 
 uBlock Origin, Brave Shields, and Privacy Badger block ads by matching requests against filter lists of known ad domains. This works — until it doesn't.
-
-**The gaps ad blockers leave:**
 
 | Where blockers fail | Why | What Veil does |
 |---|---|---|
@@ -51,8 +134,6 @@ uBlock Origin, Brave Shields, and Privacy Badger block ads by matching requests 
 | "Please disable your ad blocker" gates | User turns blocker off to read the article. Now fully exposed. | Veil stays active regardless. Ads show, but can't stalk. |
 | New ad domains | Filter lists lag new domains by days or weeks after launch. | Veil watches DOM patterns, not domains. No list to update. |
 | Acceptable Ads whitelist | Adblock Plus is paid by ad networks to pass "acceptable" ads through unblocked. | Veil frequency-caps them anyway. |
-
-**How the layers combine:**
 
 ```
 Layer 1 — Your ad blocker (optional)
@@ -68,8 +149,6 @@ Result:   Fewer total ads. Zero ad stalking. No surveillance.
           Even on sites where you've turned off your blocker,
           Veil holds the line on repetition.
 ```
-
-The key scenario: a user disables uBlock to read a paywalled news site. Without Veil, the ad network now knows exactly how many times that user has seen each ad and can build a session profile. With Veil running, ads appear — but the true count never leaves the device, and the same ad can't appear more than your configured limit.
 
 ---
 
@@ -128,6 +207,7 @@ Browser (your device)                  Server infrastructure
 ```
 
 **Cohort key format**: `{geo}-{age_bucket}-{device}` (example: `us-unknown-desktop`)
+
 No individual is ever identified. A cohort is the smallest addressable unit.
 
 ---
@@ -138,7 +218,7 @@ No individual is ever identified. A cohort is the smallest addressable unit.
 
 1. Clone the repo:
    ```bash
-   git clone https://github.com/sourikduttanyu/privacap
+   git clone https://github.com/sourikduttanyu/Veil
    ```
 
 2. Open Chrome and navigate to `chrome://extensions`
@@ -158,8 +238,8 @@ No account. No sign-up. No server required for basic use — the noise runs enti
 **Prerequisites**: Docker, Docker Compose, Git
 
 ```bash
-git clone https://github.com/sourikduttanyu/privacap
-cd privacap
+git clone https://github.com/sourikduttanyu/Veil
+cd Veil
 cp .env.example .env
 docker compose up
 ```
@@ -230,7 +310,7 @@ These are structural invariants, not policy promises. They are enforced by the s
 | Guarantee | How it's enforced |
 |---|---|
 | No user identifiers | `user_id` column does not exist in any table. `001_cohorts.sql` comment: `-- no user_id column. intentional. PII storage structurally impossible.` |
-| Noise before network | `geometricMechanism()` is called in `reporter.js` before `fetch()`. The payload object has no `user_id` field — this is a code comment, not a lint rule. |
+| Noise before network | `geometricMechanism()` is called in `reporter.js` before `fetch()`. The payload object has no identifier field — this is a code comment, not a lint rule. |
 | Cohort granularity only | Cohort key: `{geo}-{age_bucket}-{device}`. Minimum group size is large by construction. |
 | Budget enforcement | `budget-manager` uses `SELECT FOR UPDATE` to prevent concurrent epsilon overspend. |
 | Fail-closed | If `budget-manager` returns 503 or is unreachable, `cap-service` returns 503. The ad is not served. Privacy over availability. |
@@ -239,6 +319,8 @@ These are structural invariants, not policy promises. They are enforced by the s
 **What the server sees**: a stream of `{cohort_id, campaign_id, noisy_value}` tuples. No IP addresses are stored. No session tokens. No browser fingerprints.
 
 **What the server does not see**: true counts, individual identities, cross-site histories, or anything that would let it reconstruct a user profile.
+
+Privacy policy: https://sourikduttanyu.github.io/Veil/privacy-policy.html
 
 ---
 
@@ -353,9 +435,14 @@ dp-frequency-cap/
 
 ## Contributing
 
-Open an issue before starting large changes. PRs that add `user_id` anywhere — column, field, log, metric label — will be closed without review; this is not a stylistic preference, it is the core privacy guarantee.
+Open an issue before starting large changes. PRs that add a user identifier anywhere — column, field, log line, metric label — will be closed without review. This is not a stylistic preference; it is the core privacy guarantee.
 
-The highest-value contributions right now are additional noise mechanism implementations (especially the HTTP sidecar path in languages other than Python), epsilon-accuracy experiment results, and documentation improvements.
+Good first contributions:
+
+- Additional noise mechanism implementations, especially the HTTP sidecar path in languages other than Python (Rust, Go, TypeScript all have real use cases)
+- Epsilon-accuracy experiment results with different cohort sizes and cap thresholds
+- Additional DOM ad slot selectors for platforms not currently covered
+- Dashboard improvements: histogram of noisy vs true count distribution, per-cohort budget timeline
 
 See the hard invariants in `CLAUDE.md` before writing code.
 
